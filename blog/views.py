@@ -5,6 +5,7 @@ from .database import session, Entry
 
 PAGINATE_BY = 10
 
+# view multiple entries with "older" and "newer" buttons at bottom
 @app.route("/")
 @app.route("/page/<int:page>")
 def entries(page = 1):
@@ -32,26 +33,61 @@ def entries(page = 1):
         total_pages = total_pages
     )
 
+# add an entry -----------------------------------
+# first generate emtpy forms
 @app.route("/entry/add", methods = ["GET"])
 def add_entry_get():
     return render_template("add_entry.html")
 
+# submit text to db
 @app.route("/entry/add", methods = ["POST"])
 def add_entry_post():
     entry = Entry(
         title = request.form["title"],
         content = request.form["content"],
     )
+    # add and commit text to db
     session.add(entry)
     session.commit()
     return redirect(url_for("entries"))
 
+# view a singl entry at a time --------------------
 @app.route("/entry/<int:id>")
 def single_entry(id):
-
+    # start session with current id
     entry = session.query(Entry).get(id)
-
+    # render html with entire contents of session
     return render_template("single_entry.html",
         entry = entry
     )
-    
+
+# edit an existing entry -------------------------
+# first get old text and display
+@app.route("/entry/edit/<int:id>", methods = ["GET"])
+def edit_entry_get(id):
+    # create session with current id
+    entry = session.query(Entry).get(id)
+    return render_template("edit_entry.html",
+        # pass old-text to variables so they are available in html template
+        title = entry.title,
+        content = entry.content
+    )
+
+# submit edited text
+@app.route("/entry/edit/<int:id>", methods = ["POST"])
+def edit_entry_post(id):
+    # get text from form
+    entry = Entry(
+        title = request.form["title"],
+        content = request.form["content"],
+    )
+    # create session with current id
+    edited = session.query(Entry).get(id)
+    # store edited text in respective filed
+    edited.title = entry.title
+    edited.content = entry.content
+    # add and commit changes to db
+    session.add(edited)
+    session.commit()
+    # redirect to main screen
+    return redirect(url_for("entries"))

@@ -5,6 +5,9 @@
             <li>
                 {{ entry.datetime | dateformat("%d/%m/%y") }}
             </li>
+            <li>
+                <a href = "/entry/edit/{{ entry.id }}">Edit</a>
+            </li>
         </ul>
     </div>
     <div class="col-md-10">
