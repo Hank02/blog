@@ -51,7 +51,7 @@ def add_entry_post():
     session.commit()
     return redirect(url_for("entries"))
 
-# view a singl entry at a time --------------------
+# view a single entry at a time --------------------
 @app.route("/entry/<int:id>")
 def single_entry(id):
     # start session with current id
@@ -90,4 +90,23 @@ def edit_entry_post(id):
     session.add(edited)
     session.commit()
     # redirect to main screen
+    return redirect(url_for("entries"))
+
+# delete entry -----------------------------------------
+@app.route("/entry/delete/<int:id>", methods = ["GET"])
+def delete_entry(id):
+    # start session with current id
+    entry = session.query(Entry).get(id)
+    # render html with entire contents of session
+    return render_template("delete_entry.html",
+        entry = entry
+    )
+
+# confirm deletion of selected entry
+@app.route("/entry/delete/<int:id>", methods=["POST"])
+def delete_entry_confirm(id):
+    # start session with current id
+    entry = session.query(Entry).get(id)
+    session.delete(entry)
+    session.commit()
     return redirect(url_for("entries"))
