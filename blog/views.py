@@ -1,7 +1,10 @@
 from flask import render_template
 from flask import request, redirect, url_for
+from flask import flash
+from flask.ext.login import login_user, login_required, current_user
+from werkzeug.security import check_password_hash
 from blog import app
-from .database import session, Entry
+from .database import session, Entry, User
 
 PAGINATE_BY = 10
 
@@ -36,15 +39,18 @@ def entries(page = 1):
 # add an entry -----------------------------------
 # first generate emtpy forms
 @app.route("/entry/add", methods = ["GET"])
+@login_required
 def add_entry_get():
     return render_template("add_entry.html")
 
 # submit text to db
 @app.route("/entry/add", methods = ["POST"])
+@login_required
 def add_entry_post():
     entry = Entry(
         title = request.form["title"],
         content = request.form["content"],
+        author = current_user
     )
     # add and commit text to db
     session.add(entry)
@@ -64,6 +70,7 @@ def single_entry(id):
 # edit an existing entry -------------------------
 # first get old text and display
 @app.route("/entry/edit/<int:id>", methods = ["GET"])
+@login_required
 def edit_entry_get(id):
     # create session with current id
     entry = session.query(Entry).get(id)
@@ -75,6 +82,7 @@ def edit_entry_get(id):
 
 # submit edited text
 @app.route("/entry/edit/<int:id>", methods = ["POST"])
+@login_required
 def edit_entry_post(id):
     # get text from form
     entry = Entry(
@@ -94,6 +102,7 @@ def edit_entry_post(id):
 
 # delete entry -----------------------------------------
 @app.route("/entry/delete/<int:id>", methods = ["GET"])
+@login_required
 def delete_entry(id):
     # start session with current id
     entry = session.query(Entry).get(id)
@@ -104,9 +113,31 @@ def delete_entry(id):
 
 # confirm deletion of selected entry
 @app.route("/entry/delete/<int:id>", methods=["POST"])
+@login_required
 def delete_entry_confirm(id):
     # start session with current id
     entry = session.query(Entry).get(id)
     session.delete(entry)
     session.commit()
     return redirect(url_for("entries"))
+
+# add login feature ------------------------------------
+@app.route("/login", methods = ["GET"])
+def login_get():
+    return render_template("login.html")
+
+@app.route("/login", methods = ["POST"])
+def login_post():
+    # read email and password from request.form dictionary
+    email = request.form["email"]
+    password = request.form["password"]
+    # look for user object with matching email address
+    user = session.query(User).filter_by(email = email).first()
+    # make sure the user exists and that entered password matches stored password (hash)
+    if not user or not check_password_hash(user.password, password):
+        flash("Incorrect username or password", "danger")
+        return redirect(url_for("login_get"))
+    
+    # if login succeeds, store cookie and redirect user
+    login_user(user)
+    return redirect(request.args.get('next') or url_for("entries"))
