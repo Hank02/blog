@@ -2,18 +2,27 @@
 <div class="row">
     <div class="col-md-2 text-right metadata">
         <ul class="list-unstyled">
-            <li>
-                {{ entry.datetime | dateformat("%d/%m/%y") }}
-            </li>
-            <li>
-                <a href = "/entry/edit/{{ entry.id }}">Edit</a>
-            </li>
-            <li>
-                <a href = "/entry/delete/{{ entry.id }}">Delete</a>
-            </li>
-            <li>
-                {{ entry.author.name }}
-            </li>
+            {% if current_user.is_authenticated %}
+                <li>
+                    {{ entry.datetime | dateformat("%d/%m/%y") }}
+                </li>
+                <li>
+                    {{ entry.author.name }}
+                </li>
+                <li>
+                    <a href = "/entry/edit/{{ entry.id }}">Edit</a>
+                </li>
+                <li>
+                    <a href = "/entry/delete/{{ entry.id }}">Delete</a>
+                </li>
+            {% else %}
+                <li>
+                    {{ entry.datetime | dateformat("%d/%m/%y") }}
+                </li>
+                <li>
+                    {{ entry.author.name }}
+                </li>
+            {% endif %}
         </ul>
     </div>
     <div class="col-md-10">

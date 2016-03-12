@@ -1,7 +1,7 @@
 from flask import render_template
 from flask import request, redirect, url_for
 from flask import flash
-from flask.ext.login import login_user, login_required, current_user
+from flask.ext.login import login_user, login_required, current_user, logout_user
 from werkzeug.security import check_password_hash
 from blog import app
 from .database import session, Entry, User
@@ -36,6 +36,7 @@ def entries(page = 1):
         total_pages = total_pages
     )
 
+
 # add an entry -----------------------------------
 # first generate emtpy forms
 @app.route("/entry/add", methods = ["GET"])
@@ -66,6 +67,7 @@ def single_entry(id):
     return render_template("single_entry.html",
         entry = entry
     )
+
 
 # edit an existing entry -------------------------
 # first get old text and display
@@ -141,3 +143,9 @@ def login_post():
     # if login succeeds, store cookie and redirect user
     login_user(user)
     return redirect(request.args.get('next') or url_for("entries"))
+
+# log user out ----------------------------------------------
+@app.route("/logout")
+def logout():
+    logout_user()
+    return render_template("logout.html")
